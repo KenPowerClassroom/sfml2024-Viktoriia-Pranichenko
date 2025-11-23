@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <time.h>
+#include "Ball.h"
 using namespace sf;
 
 const int WINDOW_WIDTH = 520;
@@ -39,9 +40,7 @@ const int BALL_PADDLE_BOUNCE_MAX = 5;
 
 
 void handleInput(RenderWindow& window, Sprite& paddleSprite);
-void updateBallPosition(float& ballPositionX, float& ballPositionY, float ballVelocityX, float ballVelocityY);
-void checkBallCollisions(float& ballPositionX, float& ballPositionY, float& ballVelocityX, float& ballVelocityY,
-    Sprite block[], int blockCount, Sprite& paddleSprite);
+void checkBallCollisions(Ball& ball, Sprite blocks[], int blockCount, Sprite& paddleSprite);
 void drawGame(RenderWindow& window, Sprite& backgroundSprite, Sprite& ballSprite,
     Sprite& paddleSprite, Sprite block[], int blockCount);
 
@@ -72,19 +71,17 @@ int arkanoid()
          blockCount++;
       }
 
-    float ballVelocityX= BALL_VELOCITY_X, ballVelocityY= BALL_VELOCITY_Y;
-    float ballPositionX= BALL_START_POSITION_X, ballPositionY= BALL_START_POSITION_Y;
+    Ball ball(BALL_START_POSITION_X, BALL_START_POSITION_Y, BALL_VELOCITY_X, BALL_VELOCITY_Y);
 
     while (window.isOpen())
     {
         handleInput(window, paddleSprite);
 
-        updateBallPosition(ballPositionX, ballPositionY, ballVelocityX, ballVelocityY);
+        ball.updatePosition();
 
-        checkBallCollisions(ballPositionX, ballPositionY, ballVelocityX, ballVelocityY,
-            block, blockCount, paddleSprite);
+        checkBallCollisions( ball, block, blockCount, paddleSprite);
 
-        ballSprite.setPosition(ballPositionX, ballPositionY);
+        ballSprite.setPosition(ball.getPositionX(), ball.getPositionY());
    
         drawGame(window, backgroundSprite, ballSprite, paddleSprite, block, blockCount);
     }
@@ -105,30 +102,30 @@ void handleInput(RenderWindow& window, Sprite& paddleSprite)
     if (Keyboard::isKeyPressed(Keyboard::Left)) paddleSprite.move(-PADDLE_SPEED, 0);
 }
 
-void updateBallPosition(float& ballPositionX, float& ballPositionY, float ballVelocityX, float ballVelocityY)
-{
-    ballPositionX += ballVelocityX;
-    ballPositionY += ballVelocityY;
-}
 
-void checkBallCollisions(float& ballPositionX, float& ballPositionY, float& ballVelocityX, float& ballVelocityY, Sprite block[], int blockCount, Sprite& paddleSprite)
+void checkBallCollisions(Ball& ball, Sprite blocks[], int blockCount, Sprite& paddleSprite)
 {
     for (int blockIndex = 0; blockIndex < blockCount; blockIndex++)
-        if (FloatRect(ballPositionX + BALL_COLLISION_PADDING, ballPositionY + BALL_COLLISION_PADDING, BALL_COLLISION_SIZE, BALL_COLLISION_SIZE).intersects(block[blockIndex].getGlobalBounds()))
+        if (FloatRect(ball.getPositionX() + BALL_COLLISION_PADDING, ball.getPositionY() + BALL_COLLISION_PADDING, BALL_COLLISION_SIZE, BALL_COLLISION_SIZE).intersects(blocks[blockIndex].getGlobalBounds()))
         {
-            block[blockIndex].setPosition(BLOCK_INACTIVATE_X, BLOCK_INACTIVATE_Y); ballVelocityX = -ballVelocityX;
+            blocks[blockIndex].setPosition(BLOCK_INACTIVATE_X, BLOCK_INACTIVATE_Y);
+			ball.bounceHorizontally();
         }
 
     for (int blockIndex = 0; blockIndex < blockCount; blockIndex++)
-        if (FloatRect(ballPositionX + BALL_COLLISION_PADDING, ballPositionY + BALL_COLLISION_PADDING, BALL_COLLISION_SIZE, BALL_COLLISION_SIZE).intersects(block[blockIndex].getGlobalBounds()))
+        if (FloatRect(ball.getPositionX() + BALL_COLLISION_PADDING, ball.getPositionY() + BALL_COLLISION_PADDING, BALL_COLLISION_SIZE, BALL_COLLISION_SIZE).intersects(blocks[blockIndex].getGlobalBounds()))
         {
-            block[blockIndex].setPosition(BLOCK_INACTIVATE_X, BLOCK_INACTIVATE_Y); ballVelocityY = -ballVelocityY;
+            blocks[blockIndex].setPosition(BLOCK_INACTIVATE_X, BLOCK_INACTIVATE_Y);
+            ball.bounceVertically();
         }
 
-    if (ballPositionX<0 || ballPositionX>WINDOW_WIDTH)  ballVelocityX = -ballVelocityX;
-    if (ballPositionY<0 || ballPositionY>WINDOW_HEIGHT)  ballVelocityY = -ballVelocityY;
+    if (ball.getPositionX()<0 || ball.getPositionX() >WINDOW_WIDTH)  ball.bounceHorizontally();
+    if (ball.getPositionY() <0 || ball.getPositionY() >WINDOW_HEIGHT)   ball.bounceVertically();
 
-    if (FloatRect(ballPositionX, ballPositionY, BALL_SIZE, BALL_SIZE).intersects(paddleSprite.getGlobalBounds())) ballVelocityY = -(rand() % BALL_PADDLE_BOUNCE_MAX + BALL_PADDLE_BOUNCE_MIN);
+    if (FloatRect(ball.getPositionX(), ball.getPositionY(), BALL_SIZE, BALL_SIZE).intersects(paddleSprite.getGlobalBounds()))
+    {
+        ball.applyPaddleBounce(rand() % BALL_PADDLE_BOUNCE_MAX + BALL_PADDLE_BOUNCE_MIN);
+    }
 }
 
 void drawGame(RenderWindow& window, Sprite& backgroundSprite, Sprite& ballSprite, Sprite& paddleSprite, Sprite block[], int blockCount)
