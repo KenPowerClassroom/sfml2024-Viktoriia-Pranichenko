@@ -19,24 +19,10 @@ const int MAX_BLOCK_ROWS = 10;
 const int BLOCK_WIDTH = 43;
 const int BLOCK_HEIGHT = 20;
 
-const float BALL_START_POSITION_X = 300.0f;
-const float BALL_START_POSITION_Y = 300.0f;
-
-const float BALL_VELOCITY_X = 6.0f;
-const float BALL_VELOCITY_Y = 5.0f;
-
 const float BLOCK_INACTIVATE_X = -100.0f;
 const float BLOCK_INACTIVATE_Y = 0.0f;
 
-const float BALL_SIZE = 12.0f;
-
-const float BALL_COLLISION_PADDING = 3.0f;
-const float BALL_COLLISION_SIZE = 6.0f;
-
 const float PADDLE_SPEED = 6.0f;
-
-const int BALL_PADDLE_BOUNCE_MIN = 2;
-const int BALL_PADDLE_BOUNCE_MAX = 5;
 
 
 void handleInput(RenderWindow& window, Sprite& paddleSprite);
